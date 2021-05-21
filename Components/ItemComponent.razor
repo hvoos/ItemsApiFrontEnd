@@ -1,0 +1,28 @@
+﻿@using ItemsApiConsume.Models
+@inject HttpClient Http
+@inject ItemsApiConsume.Interfaces.IItemsService ItemsService
+
+<div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@Item.Title</h5>
+            <p class="card-text">@Item.Description</p>
+            <button class="btn btn-sm btn-danger btn-block" @onclick="HandleNoteDelete">Apagar</button>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public Item Item { get; set; } //Recebe o Item para usar dentro do component, poderia ser string, int ou qualquer outra coisa, neste caso foi o model completo pois usamos tudo.
+    [Parameter] public EventCallback<string> OnNoteDeleted { get; set; } //Esse calback é usado para retornar o dado para a página que está chamando o componente
+    
+    private async Task HandleNoteDelete()
+    {
+        await ItemsService.DeleteItem(Item); //Chama o serviço e apaga a nota.
+        await OnNoteDeleted.InvokeAsync(Item.Id); //devolve para a página que chamou o component
+    }
+    
+    
+    
+}

@@ -1,0 +1,74 @@
+﻿@page "/notes"
+@using ItemsApiConsume.Models
+@inject HttpClient Http
+@inject ItemsApiConsume.Interfaces.IItemsService ItemsService
+
+<h1>Minhas Notas</h1>
+
+<hr />
+
+<h3>Nova Nota</h3>
+<EditForm Model="@item" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="Title" class="control-label">Título</label>
+        <InputText @bind-Value="@item.Title" class="form-control" />
+        <ValidationMessage For="@(()=> item.Title)" />
+    </div>
+    <div class="form-group">
+        <label for="Description" class="control-label">Conteúdo</label>
+        <InputText @bind-Value="@item.Description" class="form-control" />
+        <ValidationMessage For="@(()=> item.Description)" />
+    </div>
+
+    <input type="submit" class="btn btn-primary" value="Salvar" />
+
+</EditForm>
+<hr />
+@if (items == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+<div class="row">
+    @foreach (var item in items)
+    {
+        <ItemComponent Item="item" OnNoteDeleted="NoteDeleted" />
+    }
+</div>
+}
+
+@code {
+    private List<Item> items;
+    private Item item = new Item();
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await ItemsService.GetItems();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!String.IsNullOrEmpty(item.Title) && !String.IsNullOrEmpty(item.Description))
+        {
+            item.Id = Guid.NewGuid().ToString();
+            await ItemsService.PostItem(item);
+        
+            items.Add(item);
+            item = new Item();    
+        }
+    }
+    
+    private async Task HandleNoteDelete(Item item)
+    {
+        await ItemsService.DeleteItem(item);
+    }
+    
+    //Esse método que é passado para o component informa o que ele deve fazer depois que a ação prévia foi realizada (por que configuramos assim).
+    protected async Task NoteDeleted()
+    {
+        items = (await ItemsService.GetItems());
+    }
+}
